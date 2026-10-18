@@ -1,13 +1,24 @@
-RewriteEngine On
-RewriteCond %{HTTPS} !=on
-RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
-# Versteckte Dateien sperren (außer .well-known)
-RewriteRule (^|/)\.(?!well-known) - [F]
-<IfModule mod_headers.c>
-  <FilesMatch "^(sw\.js|index\.html|manifest\.webmanifest)$">
-    Header set Cache-Control "no-cache"
-  </FilesMatch>
-  Header set Permissions-Policy "microphone=(self)"
-  Header set X-Content-Type-Options "nosniff"
-</IfModule>
+# spl.flotech.dev
+DirectoryIndex index.html
+Options -Indexes
+AddDefaultCharset UTF-8
 AddType application/manifest+json .webmanifest
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Zwei Bedingungen, weil IONOS hinter einem Proxy arbeitet und %{HTTPS} dort nicht immer gesetzt ist
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+  # Versteckte Dateien sperren (außer .well-known)
+  RewriteRule (^|/)\.(?!well-known) - [F]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header always set Permissions-Policy "microphone=(self), camera=(), geolocation=()"
+  Header set X-Content-Type-Options "nosniff"
+  # Diese Dateien immer frisch prüfen, damit Updates ankommen (der Rest kommt über sw.js)
+  <FilesMatch "^(index\.html|sw\.js|manifest\.webmanifest|app\.js|texte\.js|spl\.css|stream\.css)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
