@@ -1,0 +1,4 @@
+# Ersetzt SPL-Meter/.htaccess auf dem Webspace (spl.hogrebe.me), sobald spl.flotech.dev läuft.
+# Der Teil nach # in der Adresse (Korrekturwert, Grenzwerte) bleibt bei der Umleitung erhalten, Lesezeichen funktionieren weiter.
+RewriteEngine On
+RewriteRule ^ https://spl.flotech.dev/ [R=301,L]
