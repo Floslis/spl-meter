@@ -1,0 +1,13 @@
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# Versteckte Dateien sperren (außer .well-known)
+RewriteRule (^|/)\.(?!well-known) - [F]
+<IfModule mod_headers.c>
+  <FilesMatch "^(sw\.js|index\.html|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  Header set Permissions-Policy "microphone=(self)"
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+AddType application/manifest+json .webmanifest

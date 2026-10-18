@@ -1,0 +1,76 @@
+/* Stream-Designsprache · Standard für Florians Oberflächen, wenn nichts anderes vorgegeben ist.
+   Abgeleitet aus der Stream-Regie (Panel und Szenen). Beschreibung und Regeln: Vault Meta/Design-Sprache.md
+   Einbinden: Datei ins Projekt kopieren (nicht verlinken, damit Projekte unabhängig bleiben) und im <head>:
+   <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="stream.css">
+   Stand: 16.10.2026 */
+
+:root {
+  --grund: #0e0f13;     /* Seitenhintergrund */
+  --flaeche: #1b1e25;   /* Kästen */
+  --hell: #22262f;      /* Kopfzeilen, Hover */
+  --rand: #2c313c;      /* Ränder, Trenner */
+  --text: #f4f4f6;
+  --leise: #9a9daa;     /* Nebeninfos */
+  --akzent: #ff2b2b;    /* Kanal-Rot, sparsam */
+  --gut: #3ddc84; --warn: #ffb347; --schlecht: #ff5c5c; --info: #6cb4ff;
+  /* Titel und Labels: Avenir Next (Mac), sonst Systemschrift · Inhalte: Atkinson Hyperlegible (lesbar, l/I/1 und 0/O verschieden) */
+  --titel: 'Avenir Next', 'Avenir', 'Segoe UI', system-ui, sans-serif;
+  --eng: 'Avenir Next Condensed', 'Avenir Next', 'Arial Narrow', system-ui, sans-serif;
+  --inhalt: 'Atkinson Hyperlegible Next', 'Atkinson Hyperlegible', -apple-system, system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { background: var(--grund); }
+body { margin: 0; background: var(--grund); color: var(--text); font: 15px/1.45 var(--inhalt); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.innen { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+/* Kopfleiste: Titel groß, Großbuchstaben, gesperrt, roter Balken links */
+.kopfleiste { background: var(--flaeche); border-bottom: 1px solid var(--rand); }
+.kopfleiste .innen { display: flex; align-items: center; gap: 14px; min-height: 64px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+.kopfleiste h1 { margin: 0; padding-left: 12px; border-left: 6px solid var(--akzent); font: 800 26px/1.1 var(--titel); letter-spacing: .08em; text-transform: uppercase; }
+.kopfleiste h1 b { color: var(--akzent); font-weight: inherit; }
+.kopfleiste .rechts { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Abschnitts-Label: klein, rot, weit gesperrt (wie „CHAT“ im Stream) */
+.ueber { margin: 26px 0 12px; font: 600 13px var(--titel); letter-spacing: .3em; text-transform: uppercase; color: var(--akzent); }
+
+/* Kasten, optional mit roten Eckwinkeln wie die Kamera-Rahmen (.ecken) */
+.kasten { position: relative; background: var(--flaeche); border: 1px solid var(--rand); padding: 12px 14px; }
+.ecken::before, .ecken::after { content: ''; position: absolute; width: 22px; height: 22px; border: 3px solid var(--akzent); pointer-events: none; }
+.ecken::before { left: -4px; top: -4px; border-right: 0; border-bottom: 0; }
+.ecken::after { right: -4px; bottom: -4px; border-left: 0; border-top: 0; }
+
+/* Schild: Text mit rotem Balken links, z. B. Name, Ereignis */
+.schild { display: inline-block; padding: 4px 12px 3px 10px; border-left: 5px solid var(--akzent); background: rgba(14, 15, 19, .9); font: 800 15px var(--titel); letter-spacing: .08em; text-transform: uppercase; }
+.leiste { border-left: 3px solid var(--akzent); padding-left: 9px; }   /* leichter Balken für Listenzeilen */
+
+/* Kapsel mit Ampelpunkt für Zustände */
+.kapsel { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 8px; border-radius: 999px; border: 1px solid var(--rand); background: var(--flaeche); font: 600 13px var(--inhalt); white-space: nowrap; }
+.kapsel::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--leise); flex: none; }
+.kapsel.gut::before { background: var(--gut); } .kapsel.warn::before { background: var(--warn); } .kapsel.schlecht::before { background: var(--schlecht); } .kapsel.info::before { background: var(--info); }
+.kapsel.live { border-color: var(--akzent); color: var(--akzent); font-family: var(--titel); font-weight: 800; letter-spacing: .08em; }
+.kapsel.live::before { background: var(--akzent); }
+
+/* Zahlen und Werte: immer lesbare Schrift, nie Großbuchstaben */
+.wert { font: 800 26px/1.1 var(--inhalt); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.leise { color: var(--leise); }
+.marke { display: inline-block; font: 700 11px var(--titel); letter-spacing: .06em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; background: var(--rand); color: var(--text); }
+
+/* Knöpfe: ohne Wirkung → gesperrt und grau, nicht nur unauffällig */
+button, .knopf { font: 700 14px var(--inhalt); color: var(--text); background: var(--hell); border: 1px solid var(--rand); border-radius: 6px; padding: 7px 13px; cursor: pointer; text-decoration: none; }
+button:hover:not(:disabled), .knopf:hover { border-color: var(--akzent); }
+button.haupt { background: var(--akzent); border-color: var(--akzent); color: #fff; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+input, select, textarea { font: 15px var(--inhalt); color: var(--text); background: var(--flaeche); border: 1px solid var(--rand); border-radius: 6px; padding: 7px 10px; }
+
+/* Fenster (dialog) */
+dialog { padding: 0; border: 1px solid var(--rand); background: var(--grund); color: var(--text); width: min(900px, calc(100% - 32px)); box-shadow: 0 20px 60px #000a; }
+dialog::backdrop { background: #000a; }
+pre { font: 12.5px/1.5 ui-monospace, 'SF Mono', monospace; white-space: pre-wrap; overflow-wrap: anywhere; background: #08090c; border: 1px solid var(--rand); padding: 10px 12px; margin: 0; }
+
+/* Bewegung: weich einblenden, nie flackern */
+@keyframes rein { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.rein { animation: rein .35s ease-out; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

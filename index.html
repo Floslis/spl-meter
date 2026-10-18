@@ -3,163 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Schallpegel</title>
-<style>
-  :root{
-    color-scheme:dark;
-    --bg:#0E1618;
-    --panel:#142124;
-    --panel-hi:#1B2C30;
-    --hairline:#26383B;
-    --ink:#EAF0ED;
-    --ink-soft:#7F9895;
-    --accent:#4FC9BC;
-    --accent-dim:rgba(79,201,188,.13);
-    --accent-band:rgba(79,201,188,.22);
-    --ok:#56C98C;
-    --warn:#D9A23C;
-    --bad:#D9594A;
-    --gap:clamp(8px,1.5vh,16px);
-  }
-  *{box-sizing:border-box;}
-  html,body{height:100%;margin:0;overflow:hidden;}
-  body{
-    background:var(--bg);color:var(--ink);
-    font:400 clamp(13px,1.05vw,15px)/1.45 "Helvetica Neue",Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .num{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums;}
-  .lbl{font-size:.85em;color:var(--ink-soft);}
-
-  #app{height:100%;overflow:hidden;display:flex;flex-direction:column;gap:var(--gap);
-    max-width:1280px;margin:0 auto;padding:clamp(9px,1.5vh,16px) clamp(12px,2vw,24px) clamp(11px,1.8vh,18px);}
-
-  button,select,input[type=number],input[type=text]{
-    font:inherit;color:var(--ink);background:var(--panel);
-    border:1px solid var(--hairline);border-radius:5px;padding:6px 10px;
-  }
-  button{cursor:pointer;background:var(--panel-hi);}
-  button:hover{background:#25393E;}
-  button.primary{background:var(--accent);border-color:var(--accent);color:#07201D;font-weight:500;}
-  button.primary:hover{background:#3FB9AC;}
-  :focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
-
-  /* Kopfzeile: Zahnrad, Laufzeit, Messwerk-Infos, Status */
-  header{display:flex;align-items:center;gap:clamp(8px,1.2vw,14px);flex-shrink:0;
-    position:relative;z-index:2;}
-  #gear{display:flex;align-items:center;justify-content:center;padding:7px;color:var(--ink-soft);}
-  #gear:hover{color:var(--ink);}
-  #gear svg{display:block;width:17px;height:17px;}
-  .clock{display:flex;align-items:baseline;gap:7px;flex-shrink:0;}
-  .clock .num{font-size:clamp(16px,2.1vh,21px);}
-  .meta{flex:1 1 auto;min-width:0;display:flex;gap:clamp(8px,1.4vw,18px);
-    white-space:nowrap;overflow:hidden;font-size:.85em;color:var(--ink-soft);}
-  .meta span{overflow:hidden;text-overflow:ellipsis;}
-  .meta b{color:var(--ink);font-weight:500;font-family:ui-monospace,Menlo,monospace;}
-  .swatch{display:inline-block;width:.62em;height:.62em;border-radius:2px;margin-right:.4em;}
-  .chip{flex-shrink:0;padding:4px 10px;border-radius:5px;font-size:.85em;
-    border:1px solid var(--hairline);color:var(--ink-soft);background:var(--panel);}
-  .chip.ok{color:var(--accent);border-color:rgba(79,201,188,.4);}
-  .chip.warn{color:#100E05;background:var(--warn);border-color:var(--warn);}
-  .chip.bad{color:#150705;background:var(--bad);border-color:var(--bad);}
-  header .go{flex-shrink:0;}
-
-  /* Hauptanzeige */
-  .now{display:flex;align-items:center;gap:clamp(14px,3vw,36px);flex-wrap:wrap;
-    flex:1 1 auto;min-height:0;}
-  .big{display:flex;align-items:baseline;gap:.1em;}
-  #laf{
-    font-size:clamp(64px,min(23vw,27vh),260px);line-height:.78;letter-spacing:-.05em;font-weight:500;
-    font-family:ui-monospace,"SF Mono",Menlo,monospace;font-variant-numeric:tabular-nums;
-    color:var(--ok);transition:color .2s;
-    pointer-events:none;
-  }
-  #laf.stale{color:#3D5457;}
-  #laf.w-warn{color:var(--warn);}
-  #laf.w-bad{color:var(--bad);}
-  .big .unit{font-size:clamp(13px,1.7vh,20px);color:var(--ink-soft);margin-left:.5em;}
-  .extremes{display:flex;align-items:baseline;gap:clamp(11px,1.5vw,22px);flex-wrap:wrap;
-    padding-bottom:clamp(2px,1.2vh,12px);}
-  .extremes>div{display:flex;flex-direction:column;}
-  .extremes .num{font-size:clamp(17px,3vh,27px);}
-  .weighting{display:flex;border:1px solid var(--hairline);border-radius:5px;overflow:hidden;}
-  .weighting button{border:0;border-radius:0;background:var(--panel);padding:5px 12px;font-size:.85em;}
-  .weighting button[aria-pressed=true]{background:var(--accent);color:#07201D;}
-
-  /* Mittelwerte */
-  .means{display:flex;gap:clamp(6px,1vw,11px);flex-wrap:wrap;flex-shrink:0;}
-  .means>div{flex:1 1 150px;background:var(--panel);border:1px solid var(--hairline);
-    border-radius:6px;padding:clamp(5px,.9vh,10px) clamp(9px,1vw,14px);
-    display:flex;flex-direction:column;gap:1px;}
-  .means .num{font-size:clamp(19px,3.4vh,32px);letter-spacing:-.02em;}
-  .means .num .unit{font-size:.42em;color:var(--ink-soft);margin-left:6px;}
-  .means .partial .num{color:var(--ink-soft);}
-
-  /* Diagramm */
-  .chart{flex:0 1 auto;height:clamp(140px,31vh,330px);min-height:130px;
-    display:flex;flex-direction:column;gap:6px;}
-  .chart .head{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-  .chart .head .lbl{margin-right:auto;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .chart .head button{font-size:.85em;padding:4px 9px;flex-shrink:0;}
-  .events{display:flex;gap:6px;flex-shrink:0;}
-  .events button{border-color:rgba(79,201,188,.5);color:var(--accent);}
-  canvas{flex:1 1 0;min-height:0;width:100%;display:block;
-    border:1px solid var(--hairline);border-radius:7px;}
-
-  @media (max-width:1024px){
-    header{flex-wrap:wrap;row-gap:7px;}
-    .meta{order:5;flex:1 0 100%;white-space:normal;}
-    .meta span.dev{display:inline;}
-  }
-  @media (max-height:520px){
-    .means .num{font-size:clamp(17px,4vh,24px);}
-    .chart .head .lbl{display:none;}
-  }
-  @media (max-width:760px){ .meta span.dev{display:none;} }
-
-  /* Einstellungsfenster */
-  .scrim{position:fixed;inset:0;background:rgba(6,12,13,.8);display:flex;
-    align-items:center;justify-content:center;padding:16px;z-index:10;}
-  .scrim[hidden]{display:none;}
-  .sheet{background:var(--panel);border:1px solid var(--hairline);border-radius:11px;
-    width:min(560px,100%);max-height:100%;overflow:auto;padding:clamp(16px,3vh,26px);
-    display:flex;flex-direction:column;gap:clamp(12px,2vh,20px);}
-  .sheet h2{margin:0;font-size:clamp(18px,2.6vh,23px);font-weight:500;letter-spacing:-.01em;}
-  .sheet h3{margin:0 0 7px;font-size:.9em;font-weight:500;color:var(--ink-soft);}
-  .field{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
-  .field select{flex:1 1 180px;min-width:0;}
-  .field input[type=number]{width:96px;text-align:right;font-family:ui-monospace,Menlo,monospace;}
-  .live{background:var(--bg);border:1px solid var(--hairline);border-radius:6px;
-    padding:9px 12px;display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;}
-  .live .num{font-size:24px;}
-  .note{font-size:.82em;color:var(--ink-soft);line-height:1.5;margin:0;}
-  .sheet .actions{display:flex;gap:9px;flex-wrap:wrap;}
-  .sheet .actions .primary{flex:1;}
-</style>
+<title>Schallpegel · FLOTECH</title>
+<meta name="description" content="Schallpegel-Messer im Browser: dB(A), LAeq 30 min und LCpeak nach DIN 15905-5, Verlauf und Messprotokoll. Nichts wird hochgeladen.">
+<meta name="theme-color" content="#0e0f13">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="bilder/icon-32.png">
+<link rel="apple-touch-icon" href="bilder/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preload" href="schrift/atkinson-next-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="stream.css">
+<link rel="stylesheet" href="spl.css">
 </head>
 <body>
 
 <div id="app" hidden>
   <header>
-    <button id="gear" title="Einstellungen" aria-label="Einstellungen">
+    <button id="gear" data-t-title="settings" aria-label="Einstellungen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="12" r="3.1"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.830 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.820l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
       </svg>
     </button>
-    <div class="clock"><span class="lbl">Laufzeit</span><span id="elapsed" class="num">0:00:00</span></div>
+    <h1 class="titel" data-t="appTitle">Schallpegel</h1>
+    <div class="clock"><span class="lbl" data-t="elapsed">Laufzeit</span><span id="elapsed" class="num">0:00:00</span></div>
     <div class="meta" id="meta"></div>
-    <span id="chip" class="chip">bereit</span>
-    <button id="startstop" class="go">Messung stoppen</button>
+    <span id="chip" class="kapsel" data-t="ready">bereit</span>
+    <button id="startstop" class="go" data-t="stop">Messung stoppen</button>
   </header>
 
   <section class="now">
-    <div class="big"><span id="laf" class="stale">--.-</span><span class="unit">dB(A)</span></div>
+    <div class="big"><span id="laf" class="stale">--.-</span><span class="unit" id="lafUnit">dB(A)</span></div>
     <div class="extremes">
       <div><span class="lbl">min</span><span id="lmin" class="num">--.-</span></div>
       <div><span class="lbl">max</span><span id="lmax" class="num">--.-</span></div>
-      <button id="reset">min/max zurücksetzen</button>
-      <div class="weighting" role="group" aria-label="Zeitbewertung">
+      <div><span class="lbl">LCpeak max</span><span id="lpk" class="num">--.-</span></div>
+      <button id="reset" data-t="reset">min/max zurücksetzen</button>
+      <div class="weighting" role="group" data-t-label="timeWeighting">
         <button id="fast" aria-pressed="true">Fast</button>
         <button id="slow" aria-pressed="false">Slow</button>
       </div>
@@ -167,17 +47,18 @@
   </section>
 
   <section class="means">
-    <div id="m1"><span class="lbl">Mittel 1 Minute</span><span class="num"><span id="leq1">--.-</span><span class="unit">dB(A)</span></span></div>
-    <div id="m5"><span class="lbl">Mittel 5 Minuten</span><span class="num"><span id="leq5">--.-</span><span class="unit">dB(A)</span></span></div>
-    <div id="m10"><span class="lbl">Mittel 10 Minuten</span><span class="num"><span id="leq10">--.-</span><span class="unit">dB(A)</span></span></div>
+    <div id="m1"><span class="lbl" data-t="mean1">Mittel 1 Minute</span><span class="num"><span id="leq1">--.-</span><span class="unit">dB(A)</span></span></div>
+    <div id="m5"><span class="lbl" data-t="mean5">Mittel 5 Minuten</span><span class="num"><span id="leq5">--.-</span><span class="unit">dB(A)</span></span></div>
+    <div id="m10"><span class="lbl" data-t="mean10">Mittel 10 Minuten</span><span class="num"><span id="leq10">--.-</span><span class="unit">dB(A)</span></span></div>
+    <div id="m30" class="din"><span class="lbl" data-t-html="mean30"><b>LAeq 30 min</b> · DIN</span><span class="num"><span id="leq30">--.-</span><span class="unit">dB(A)</span></span></div>
   </section>
 
   <section class="chart">
     <div class="head">
-      <span class="lbl" id="chartLbl">Verlauf der letzten 60 Minuten</span>
+      <span class="lbl" id="chartLbl"></span>
       <span class="events" id="events"></span>
-      <button id="save">Bild speichern</button>
-      <button id="clear">Verlauf löschen</button>
+      <button id="export" class="haupt" data-t="export">Exportieren</button>
+      <button id="clear" data-t="clear">Verlauf löschen</button>
     </div>
     <canvas id="cv"></canvas>
   </section>
@@ -185,743 +66,127 @@
 
 <div class="scrim" id="scrim" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
-    <h2 id="sheetTitle">Messung einrichten</h2>
+    <h2 id="sheetTitle" data-t="setupTitle">Messung einrichten</h2>
 
     <div>
-      <h3>Veranstaltung</h3>
-      <div class="field">
-        <input id="ev" type="text" placeholder="z. B. Gottesdienst 21.09." style="flex:1 1 220px;min-width:0;text-align:left">
+      <h3 data-t="event">Veranstaltung</h3>
+      <div class="field"><input id="ev" type="text" data-t-ph="eventPh"></div>
+      <div class="field" style="margin-top:8px">
+        <input id="ort" type="text" data-t-ph="placePh">
+        <input id="wer" type="text" data-t-ph="byPh">
       </div>
-      <p class="note">Steht als Überschrift im gespeicherten Verlaufsbild und im Dateinamen. Kann leer bleiben.</p>
+      <p class="note" data-t="eventNote"></p>
     </div>
 
     <div>
-      <h3>Eingang</h3>
+      <h3 data-t="input">Eingang</h3>
       <div class="field">
-        <select id="dev"><option value="">Mikrofon noch nicht freigegeben</option></select>
-        <select id="chan"><option value="0">Kanal 1</option><option value="1">Kanal 2</option></select>
+        <select id="dev"><option value="" data-t="noMic">Mikrofon noch nicht freigegeben</option></select>
+        <select id="chan" style="flex:0 0 auto"><option value="0"></option><option value="1"></option></select>
       </div>
       <div class="field" style="margin-top:8px">
-        <button id="grant" class="primary">Mikrofon freigeben</button>
-        <span id="devNote" class="note"></span>
+        <button id="grant" class="haupt" data-t="grant">Mikrofon freigeben</button>
+        <span id="devNote" class="note" style="margin:0"></span>
       </div>
     </div>
 
     <div>
-      <h3>Kalibrierung</h3>
+      <h3 data-t="calibration">Kalibrierung</h3>
       <div class="live">
-        <div><span class="lbl">Rohpegel</span> <span class="num" id="rawLive">--.-</span> <span class="lbl">dBFS</span></div>
-        <div><span class="lbl">ergibt</span> <span class="num" id="calLive">--.-</span> <span class="lbl">dB(A)</span></div>
+        <div><span class="lbl" data-t="raw">Rohpegel</span> <span class="num" id="rawLive">--.-</span> <span class="lbl">dBFS</span></div>
+        <div><span class="lbl" data-t="gives">ergibt</span> <span class="num" id="calLive">--.-</span> <span class="lbl">dB(A)</span></div>
       </div>
       <div class="field" style="margin-top:9px">
-        <button id="cal94">auf 94 dB kalibrieren</button>
-        <button id="cal110">auf 110 dB</button>
-        <span class="lbl">Korrekturwert</span>
+        <button id="cal94" data-t="cal94">auf 94 dB kalibrieren</button>
+        <button id="cal110" data-t="cal110">auf 110 dB</button>
+        <span class="lbl" data-t="offset">Korrekturwert</span>
         <input id="off" type="number" step="0.1" value="0">
         <span class="lbl">dB</span>
       </div>
-      <p class="note">Kalibrator aufsetzen, einschalten, zwei Sekunden warten, dann den passenden Knopf drücken. Der Korrekturwert lässt sich auch direkt eintippen, wenn er von einer früheren Messung bekannt ist. Danach den Gain am Interface nicht mehr verstellen.</p>
+      <p class="note" data-t="calNote"></p>
     </div>
 
     <div>
-      <h3>Grenzwerte der Hauptanzeige</h3>
+      <h3 data-t="limits">Grenzwerte</h3>
       <div class="field">
-        <span class="lbl"><span class="swatch" style="background:var(--warn)"></span>gelb ab</span>
+        <span class="lbl"><span class="swatch" style="background:var(--warn)"></span><span data-t="yellowFrom">gelb ab</span></span>
         <input id="thY" type="number" step="1" value="95">
-        <span class="lbl"><span class="swatch" style="background:var(--bad)"></span>rot ab</span>
+        <span class="lbl"><span class="swatch" style="background:var(--schlecht)"></span><span data-t="redFrom">rot ab</span></span>
         <input id="thR" type="number" step="1" value="99">
         <span class="lbl">dB(A)</span>
       </div>
-      <p class="note">Voreingestellt nach DIN 15905-5: ab 95 dB(A) ist bei Veranstaltungen ein Warnhinweis für das Publikum fällig, 99 dB(A) als Mittelungspegel über 30 Minuten ist die Obergrenze. Für die Schweiz sind 93 und 96 dB(A) die üblichen Marken.</p>
+      <div class="field" style="margin-top:8px">
+        <span class="lbl">LCpeak</span>
+        <input id="thP" type="number" step="1" value="135">
+        <span class="lbl">dB(C)</span>
+      </div>
+      <p class="note" data-t="limitsNote"></p>
     </div>
 
     <div>
-      <h3>Gottesdienstzeiten</h3>
+      <h3 data-t="services">Gottesdienstzeiten</h3>
       <div class="field">
-        <input id="svc" type="text" placeholder="10:00, 12:00, 16:00" style="flex:1 1 200px;min-width:0;text-align:left">
-        <span class="lbl">Dauer</span>
+        <input id="svc" type="text" placeholder="10:00, 12:00, 16:00">
+        <span class="lbl" data-t="duration">Dauer</span>
         <input id="dur" type="number" step="5" min="10" max="240" value="90">
         <span class="lbl">min</span>
       </div>
-      <p class="note">Läuft die Messung während einer dieser Zeiten, erscheint nach einer Stunde ein Knopf, mit dem sich genau dieser Zeitraum als Bild sichern lässt. Der Knopf bleibt bis zum Neuladen der Seite stehen.</p>
+      <p class="note" data-t="servicesNote"></p>
     </div>
 
     <div>
-      <h3>Auflösung des Verlaufs</h3>
+      <h3 data-t="resolution">Auflösung des Verlaufs</h3>
       <div class="field">
         <select id="res" style="flex:0 0 auto">
-          <option value="0">automatisch</option>
-          <option value="1">jede Sekunde</option>
-          <option value="5">5 Sekunden</option>
-          <option value="10">10 Sekunden</option>
-          <option value="30">30 Sekunden</option>
-          <option value="60">1 Minute</option>
+          <option value="0" data-t="resAuto">automatisch</option>
+          <option value="1" data-t="res1">jede Sekunde</option>
+          <option value="5" data-t="res5">5 Sekunden</option>
+          <option value="10" data-t="res10">10 Sekunden</option>
+          <option value="30" data-t="res30">30 Sekunden</option>
+          <option value="60" data-t="res60">1 Minute</option>
         </select>
       </div>
-      <p class="note">Die Linie zeigt den Mittelungspegel je Intervall, das blasse Band dahinter die Streuung der Sekundenwerte darin. Je gröber, desto ruhiger das Bild — die Spitzen bleiben im Band trotzdem sichtbar.</p>
+      <p class="note" data-t="resNote"></p>
+    </div>
+
+    <div>
+      <h3 data-t="app">App und Sprache</h3>
+      <div class="field">
+        <select id="lang" style="flex:0 0 auto"><option value="de">Deutsch</option><option value="en">English</option></select>
+      </div>
+      <p class="note" data-t="appNote"></p>
     </div>
 
     <div class="actions">
-      <button id="go" class="primary">Messung starten</button>
-      <button id="close" hidden>Schließen</button>
+      <button id="go" class="haupt" data-t="start">Messung starten</button>
+      <button id="close" hidden data-t="close">Schließen</button>
     </div>
-    <p class="note" id="bookmark"></p>
+    <p class="note" id="bookmark" data-t="bookmark"></p>
+    <p class="fuss"><span id="version"></span> · <a href="https://github.com/Floslis/spl-meter" target="_blank" rel="noopener">GitHub</a> · <a href="https://ko-fi.com/floslist" target="_blank" rel="noopener">☕ Ko-fi</a> · <a href="https://flotech.dev" target="_blank" rel="noopener">FLOTECH</a></p>
   </div>
 </div>
 
-<script>
-(function(){
-  "use strict";
-  var $=function(s){ return document.querySelector(s); };
-  var CSS=getComputedStyle(document.documentElement);
-  var C=function(n){ return CSS.getPropertyValue(n).trim(); };
+<div class="scrim" id="exScrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="exTitle">
+    <h2 id="exTitle" data-t="export">Exportieren</h2>
+    <div>
+      <h3 data-t="period">Zeitraum</h3>
+      <div class="field"><select id="win"></select></div>
+      <p class="note" id="winInfo"></p>
+    </div>
+    <div class="actions">
+      <button id="exPng" data-t="exPng">Bild (PNG)</button>
+      <button id="exPdf" class="haupt" data-t="exPdf">Protokoll (PDF)</button>
+      <button id="exCsv" data-t="exCsv">Daten (CSV)</button>
+    </div>
+    <p class="note" data-t="exportNote"></p>
+    <div class="actions"><button id="exClose" data-t="close">Schließen</button></div>
+  </div>
+</div>
 
-  if(!window.isSecureContext || !navigator.mediaDevices){
-    document.body.innerHTML='<div style="max-width:56ch;margin:12vh auto;padding:0 24px">'+
-      '<h2>Sicherer Kontext nötig</h2><p>Der Mikrofonzugriff funktioniert nur über <b>https://</b> '+
-      'oder <b>http://localhost</b>, nicht beim Öffnen per Doppelklick. Lokal testen: im Ordner dieser Datei '+
-      '<b>python3 -m http.server 8000</b> starten und <b>http://localhost:8000/schallpegel.html</b> aufrufen.</p></div>';
-    return;
-  }
+<div id="protokoll"></div>
 
-  /* ---------- Konfiguration in der URL ---------- */
-  var cfg={off:0,y:95,r:99,dev:"",ch:0,tw:"f",ev:"",res:10,svc:"10:00, 12:00, 16:00",dur:90};
-  (function(){
-    var h=location.hash.replace(/^#/,""); if(!h) return;
-    h.split("&").forEach(function(p){
-      var kv=p.split("="),k=kv[0],v=decodeURIComponent(kv[1]||"");
-      if(k==="off"||k==="y"||k==="r"||k==="ch"||k==="res"||k==="dur"){ var n=parseFloat(v); if(isFinite(n)) cfg[k]=n; }
-      else if(k==="dev"||k==="tw"||k==="ev"||k==="svc") cfg[k]=v;
-    });
-  })();
-  function writeHash(){
-    var s=["off="+cfg.off.toFixed(1),"y="+cfg.y,"r="+cfg.r,"ch="+cfg.ch,"tw="+cfg.tw,"res="+cfg.res,"dur="+cfg.dur];
-    if(cfg.svc) s.push("svc="+encodeURIComponent(cfg.svc));
-    if(cfg.ev) s.push("ev="+encodeURIComponent(cfg.ev));
-    if(cfg.dev) s.push("dev="+encodeURIComponent(cfg.dev));
-    history.replaceState(null,"","#"+s.join("&"));
-    $("#bookmark").textContent="Diese Einstellungen stehen in der Adresszeile — die Seite als Lesezeichen speichern, dann sind Korrekturwert und Grenzwerte beim nächsten Öffnen schon gesetzt. Ist die Mikrofonfreigabe erteilt und ein Korrekturwert vorhanden, startet die Messung dann sofort ohne dieses Fenster.";
-  }
-
-  /* ---------- A-Bewertung nach IEC 61672 ---------- */
-  function aWeightSections(fs){
-    var f1=20.598997,f2=107.65265,f3=737.86223,f4=12194.217;
-    var w=function(f){ return 2*Math.PI*f; };
-    var analog=[
-      {n:[1,0,0],d:[1,2*w(f1),w(f1)*w(f1)]},
-      {n:[1,0,0],d:[1,2*w(f4),w(f4)*w(f4)]},
-      {n:[0,0,1],d:[1,w(f2)+w(f3),w(f2)*w(f3)]}
-    ];
-    var K=2*fs,K2=K*K;
-    var secs=analog.map(function(s){
-      var n2=s.n[0],n1=s.n[1],n0=s.n[2],d2=s.d[0],d1=s.d[1],d0=s.d[2];
-      var b0=n2*K2+n1*K+n0,b1=2*(n0-n2*K2),b2=n2*K2-n1*K+n0;
-      var a0=d2*K2+d1*K+d0,a1=2*(d0-d2*K2),a2=d2*K2-d1*K+d0;
-      return {b:[b0/a0,b1/a0,b2/a0],a:[1,a1/a0,a2/a0]};
-    });
-    var wn=2*Math.PI*1000/fs,m=1;
-    secs.forEach(function(s){
-      var cr=Math.cos(wn),sr=-Math.sin(wn),cr2=Math.cos(2*wn),sr2=-Math.sin(2*wn);
-      var nr=s.b[0]+s.b[1]*cr+s.b[2]*cr2, ni=s.b[1]*sr+s.b[2]*sr2;
-      var dr=s.a[0]+s.a[1]*cr+s.a[2]*cr2, di=s.a[1]*sr+s.a[2]*sr2;
-      m*=Math.sqrt((nr*nr+ni*ni)/(dr*dr+di*di));
-    });
-    secs[0].b=secs[0].b.map(function(v){ return v/m; });
-    return secs;
-  }
-
-  var workletSrc=[
-    "class RMSProc extends AudioWorkletProcessor{",
-    "  constructor(){super();this.s=0;this.n=0;}",
-    "  process(inputs){",
-    "    var ch=inputs[0][0];",
-    "    if(ch){var a=0;for(var i=0;i<ch.length;i++){a+=ch[i]*ch[i];}this.s+=a;this.n+=ch.length;}",
-    "    if(this.n>=sampleRate*0.05){this.port.postMessage({s:this.s,n:this.n});this.s=0;this.n=0;}",
-    "    return true;",
-    "  }",
-    "}",
-    "registerProcessor('rms-proc',RMSProc);"
-  ].join("\n");
-
-  /* ---------- Zustand ---------- */
-  var ctx=null,stream=null,rawAn=null,rawBuf=null,live=false,measureStart=null,measureStartWall=null;
-  var KEEP=20*3600;   // Verlauf: 20 Stunden, auch im Browser-Speicher (Lücken = NaN)
-  var tau=cfg.tw==="s"?1.0:0.125,msq=0,settle=0;
-  var rawMin=Infinity,rawMax=-Infinity,rawNow=null;
-  var ring=[],secMS=[],secS=0,secN=0,secCount=0,clipUntil=0;
-  var cv=$("#cv"),elLaf=$("#laf");
-
-  function fmt(v){ return (v===null||!isFinite(v))?"--.-":(v+cfg.off).toFixed(1); }
-  function chip(t,c){ var e=$("#chip"); e.textContent=t; e.className="chip"+(c?" "+c:""); }
-  function khz(){ var v=ctx.sampleRate/1000; return (Math.abs(v-Math.round(v))<.05?String(Math.round(v)):v.toFixed(1).replace(".",","))+" kHz"; }
-
-  /* ---------- Audio ---------- */
-  function listDevices(){
-    return navigator.mediaDevices.enumerateDevices().then(function(ds){
-      var ins=ds.filter(function(d){ return d.kind==="audioinput"; });
-      var sel=$("#dev"); sel.innerHTML="";
-      ins.forEach(function(d,i){
-        var o=document.createElement("option");
-        o.value=d.deviceId; o.textContent=d.label||("Eingang "+(i+1));
-        sel.appendChild(o);
-      });
-      if(cfg.dev && ins.some(function(d){ return d.deviceId===cfg.dev; })) sel.value=cfg.dev;
-      cfg.dev=sel.value||"";
-      $("#chan").value=String(cfg.ch);
-      $("#devNote").textContent=ins.length+" Eingänge gefunden";
-    });
-  }
-
-  function openStream(){
-    stopAudio();
-    var want=(cfg.dev?{deviceId:{exact:cfg.dev}}:{});
-    want.echoCancellation=false; want.noiseSuppression=false; want.autoGainControl=false;
-    want.channelCount=2;
-    return navigator.mediaDevices.getUserMedia({audio:want,video:false})
-      .catch(function(){ delete want.channelCount;
-        return navigator.mediaDevices.getUserMedia({audio:want,video:false}); })
-      .then(function(s){ stream=s; return listDevices(); })
-      .then(buildChain);
-  }
-
-  function buildChain(){
-    ctx=new (window.AudioContext||window.webkitAudioContext)();
-    var url=URL.createObjectURL(new Blob([workletSrc],{type:"application/javascript"}));
-    return ctx.audioWorklet.addModule(url).then(function(){
-      var src=ctx.createMediaStreamSource(stream);
-      var split=ctx.createChannelSplitter(2);
-      src.connect(split);
-      var first=null,prev=null;
-      aWeightSections(ctx.sampleRate).forEach(function(s){
-        var f=ctx.createIIRFilter(Float64Array.from(s.b),Float64Array.from(s.a));
-        if(prev){ prev.connect(f); } else { first=f; }
-        prev=f;
-      });
-      var idx=cfg.ch|0;
-      split.connect(first,idx);
-      var wn=new AudioWorkletNode(ctx,"rms-proc",{numberOfInputs:1,numberOfOutputs:0,channelCount:1});
-      prev.connect(wn); wn.port.onmessage=onBlock;
-      rawAn=ctx.createAnalyser(); rawAn.fftSize=2048;
-      rawBuf=new Float32Array(rawAn.fftSize);
-      split.connect(rawAn,idx);
-      live=true; settle=performance.now()+700;
-      $("#startstop").textContent="Messung stoppen";
-      return ctx.resume();
-    });
-  }
-
-  function stopAudio(){
-    live=false;
-    if(ctx){ ctx.close(); ctx=null; }
-    if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; }
-  }
-
-  function onBlock(ev){
-    if(!live) return;
-    var s=ev.data.s,n=ev.data.n,now=performance.now();
-    msq += (s/n-msq)*(1-Math.exp(-(n/ctx.sampleRate)/tau));
-    rawNow=10*Math.log10(Math.max(msq,1e-20));
-    if(now>settle && rawNow>-180){
-      if(rawNow<rawMin) rawMin=rawNow;
-      if(rawNow>rawMax) rawMax=rawNow;
-    }
-    ring.push({s:s,n:n,t:now});
-    while(ring.length && now-ring[0].t>60000) ring.shift();
-    secS+=s; secN+=n;
-    if(secN>=ctx.sampleRate){
-      secMS.push(secS/secN);
-      secCount++;
-      if(secMS.length>KEEP) secMS.shift();
-      secS=0; secN=0; draw();
-    }
-    rawAn.getFloatTimeDomainData(rawBuf);
-    var pk=0;
-    for(var i=0;i<rawBuf.length;i+=4){ var a=Math.abs(rawBuf[i]); if(a>pk) pk=a; }
-    if(pk>0.985) clipUntil=now+1500;
-  }
-
-  function leqRing(sec){
-    var now=performance.now(),s=0,n=0;
-    for(var i=ring.length-1;i>=0;i--){
-      if(now-ring[i].t>sec*1000) break;
-      s+=ring[i].s; n+=ring[i].n;
-    }
-    return n?10*Math.log10(Math.max(s/n,1e-20)):null;
-  }
-  function leqMin(minutes){
-    var k=minutes*60,take=Math.min(k,secMS.length);
-    if(!take) return null;
-    var s=0,n=0;
-    for(var i=secMS.length-take;i<secMS.length;i++) if(secMS[i]===secMS[i]){ s+=secMS[i]; n++; }
-    if(!n) return null;
-    return {db:10*Math.log10(Math.max(s/n,1e-20)),full:secMS.length>=k};
-  }
-  function setMean(box,id,v){
-    $("#"+id).textContent=v?fmt(v.db):"--.-";
-    $("#"+box).classList.toggle("partial",!v||!v.full);
-  }
-  function hms(ms){
-    var t=Math.floor(ms/1000),h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=t%60;
-    return h+":"+("0"+m).slice(-2)+":"+("0"+s).slice(-2);
-  }
-
-  /* ---------- Anzeige ---------- */
-  setInterval(function(){
-    if(!$("#scrim").hidden && live){
-      $("#rawLive").textContent=rawNow===null?"--.-":rawNow.toFixed(1);
-      $("#calLive").textContent=fmt(rawNow);
-    }
-    if(!live) return;
-    if(ctx && ctx.state==="suspended"){
-      chip("zum Starten einmal klicken","warn");
-      elLaf.className="stale";
-      return;
-    }
-
-    elLaf.textContent=fmt(rawNow);
-    var v=(rawNow===null?null:rawNow+cfg.off);
-    elLaf.className=v===null?"stale":(v>=cfg.r?"w-bad":(v>=cfg.y?"w-warn":""));
-    $("#lmin").textContent=fmt(rawMin===Infinity?null:rawMin);
-    $("#lmax").textContent=fmt(rawMax===-Infinity?null:rawMax);
-
-    var one=leqRing(60);
-    $("#leq1").textContent=fmt(one);
-    $("#m1").classList.toggle("partial", ring.length?(performance.now()-ring[0].t)<59000:true);
-    setMean("m5","leq5",leqMin(5));
-    setMean("m10","leq10",leqMin(10));
-
-    if(measureStart) $("#elapsed").textContent=hms(performance.now()-measureStart);
-    checkServices();
-
-    if(performance.now()<clipUntil) chip("Eingang übersteuert","bad");
-    else if(!cfg.off) chip("nicht kalibriert","warn");
-    else chip(khz()+" · kalibriert","ok");
-  },100);
-
-  /* ---------- Diagramm ---------- */
-  function wallOfSec(a){ return measureStartWall + (a+0.5)*1000; }
-  function absOfWall(t){ return Math.floor((t-measureStartWall)/1000); }
-  function hhmm(t){
-    var d=new Date(t);
-    return ("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
-  }
-
-  function render(g,ox,oy,w,h,k,win){
-    var padL=44*k,padR=13*k,padT=13*k,padB=24*k;
-    var iw=w-padL-padR,ih=h-padT-padB;
-    g.save(); g.translate(ox,oy);
-    g.fillStyle=C("--panel"); g.fillRect(0,0,w,h);
-
-    var L=secMS.length,base=secCount-L;
-    var a1=win?win.a1:secCount-1;
-    var a0=win?win.a0:a1-3599;
-    var span=Math.max(1,a1-a0);
-    var xa=function(a){ return padL+iw*(a-a0)/span; };
-
-    var iStart=Math.max(a0,base),iEnd=Math.min(a1,secCount-1);
-    var vals=[];
-    for(var q=iStart;q<=iEnd;q++) if(secMS[q-base]===secMS[q-base]) vals.push(10*Math.log10(Math.max(secMS[q-base],1e-20))+cfg.off);
-
-    var lo,hi;
-    if(cfg.off){
-      lo=50; hi=110;
-      if(vals.length){
-        lo=Math.min(lo,Math.floor((Math.min.apply(null,vals)-4)/10)*10);
-        hi=Math.max(hi,Math.ceil((Math.max.apply(null,vals)+4)/10)*10);
-      }
-      lo=Math.min(lo,Math.floor((cfg.y-5)/10)*10);
-      hi=Math.max(hi,Math.ceil((cfg.r+5)/10)*10);
-    } else {
-      if(vals.length){ lo=Math.min.apply(null,vals); hi=Math.max.apply(null,vals); }
-      else { lo=-60; hi=0; }
-      lo=Math.floor((lo-4)/10)*10; hi=Math.ceil((hi+4)/10)*10;
-      if(hi-lo<20) hi=lo+20;
-    }
-    var y=function(v){ return padT+ih-(v-lo)/(hi-lo)*ih; };
-
-    g.font=(11*k)+"px ui-monospace,Menlo,monospace";
-    g.lineWidth=1*k;
-    var step=(hi-lo)>80?20:10;
-    for(var v=lo;v<=hi;v+=step){
-      var yy=Math.round(y(v))+.5;
-      g.strokeStyle=C("--hairline");
-      g.beginPath(); g.moveTo(padL,yy); g.lineTo(w-padR,yy); g.stroke();
-      g.fillStyle=C("--ink-soft"); g.textAlign="right";
-      g.fillText(String(v),padL-7*k,yy+4*k);
-    }
-
-    // Zeitachse: laufende Messung relativ, gespeicherter Zeitraum mit Uhrzeit
-    var ticks=[];
-    // Im exportierten Bild immer Uhrzeiten im 15-Minuten-Takt (erst ab über 4 Stunden alle 30 Minuten)
-    if((win||g.canvas!==cv) && measureStartWall){
-      var tstep=span<=4*3600?900:1800;
-      var t0=Math.ceil(wallOfSec(a0)/(tstep*1000))*tstep*1000;
-      for(var t=t0;t<=wallOfSec(a1);t+=tstep*1000) ticks.push({a:absOfWall(t),text:hhmm(t)});
-    } else {
-      [60,45,30,15,0].forEach(function(m){
-        ticks.push({a:a1-m*60,text:m===0?"jetzt":("-"+m+" min")});
-      });
-    }
-    g.textAlign="center";
-    ticks.forEach(function(tk){
-      var xx=Math.round(xa(tk.a))+.5;
-      if(xx>padL+2 && xx<w-padR-2){
-        g.strokeStyle="rgba(38,56,59,.65)";
-        g.beginPath(); g.moveTo(xx,padT); g.lineTo(xx,padT+ih); g.stroke();
-      }
-      g.fillStyle=C("--ink-soft");
-      g.fillText(tk.text,Math.min(Math.max(xx,padL+20*k),w-padR-20*k),h-7*k);
-    });
-
-    if(cfg.off){
-      g.setLineDash([5*k,4*k]); g.globalAlpha=.75;
-      [[cfg.y,C("--warn")],[cfg.r,C("--bad")]].forEach(function(p){
-        if(p[0]<lo||p[0]>hi) return;
-        var yl=Math.round(y(p[0]))+.5;
-        g.strokeStyle=p[1];
-        g.beginPath(); g.moveTo(padL,yl); g.lineTo(w-padR,yl); g.stroke();
-      });
-      g.globalAlpha=1; g.setLineDash([]);
-    }
-
-    if(iEnd>=iStart){
-      var bs=cfg.res>0?cfg.res:Math.max(1,Math.round(span/Math.max(1,iw/2)));
-      var bins=[],i=iStart;
-      while(i<=iEnd){
-        var stop=Math.min((Math.floor(i/bs)+1)*bs-1,iEnd);
-        var sum=0,mx=-Infinity,mn=Infinity,n=0;
-        for(var p2=i;p2<=stop;p2++){
-          var d=secMS[p2-base]; if(d!==d) continue; sum+=d; n++;
-          if(d>mx) mx=d;
-          if(d<mn) mn=d;
-        }
-        if(!n){ if(bins.length&&bins[bins.length-1]) bins.push(null); i=stop+1; continue; }
-        bins.push({
-          a:(i+stop)/2,
-          leq:10*Math.log10(Math.max(sum/n,1e-20))+cfg.off,
-          hi:10*Math.log10(Math.max(mx,1e-20))+cfg.off,
-          lo:10*Math.log10(Math.max(mn,1e-20))+cfg.off
-        });
-        i=stop+1;
-      }
-
-      g.save();
-      g.beginPath(); g.rect(padL,padT,iw,ih); g.clip();
-      var segs=[[]]; bins.forEach(function(p){ if(p) segs[segs.length-1].push(p); else segs.push([]); });
-      segs.forEach(function(bins){
-      if(bs>1 && bins.length>1){
-        g.beginPath();
-        bins.forEach(function(p,ix){ ix?g.lineTo(xa(p.a),y(p.hi)):g.moveTo(xa(p.a),y(p.hi)); });
-        for(var z=bins.length-1;z>=0;z--) g.lineTo(xa(bins[z].a),y(bins[z].lo));
-        g.closePath(); g.fillStyle=C("--accent-band"); g.fill();
-      } else if(bins.length>1){
-        g.beginPath(); g.moveTo(xa(bins[0].a),padT+ih);
-        bins.forEach(function(p){ g.lineTo(xa(p.a),y(p.leq)); });
-        g.lineTo(xa(bins[bins.length-1].a),padT+ih); g.closePath();
-        g.fillStyle=C("--accent-dim"); g.fill();
-      }
-      if(bins.length>1){
-        g.beginPath();
-        bins.forEach(function(p,ix){ ix?g.lineTo(xa(p.a),y(p.leq)):g.moveTo(xa(p.a),y(p.leq)); });
-        g.strokeStyle=C("--accent"); g.lineWidth=1.7*k;
-        g.lineJoin="round"; g.lineCap="round"; g.stroke();
-      }
-      });
-      g.restore();
-    }
-    g.restore();
-  }
-
-  function draw(){
-    var dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;
-    if(!w||!h) return;
-    cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
-    var g=cv.getContext("2d"); g.scale(dpr,dpr); g.clearRect(0,0,w,h);
-    render(g,0,0,w,h,1);
-  }
-  if(window.ResizeObserver) new ResizeObserver(function(){ draw(); }).observe(cv);
-  window.addEventListener("resize",draw);
-
-  function windowStats(a0,a1){
-    var L=secMS.length,base=secCount-L;
-    var i0=Math.max(a0,base),i1=Math.min(a1,secCount-1);
-    if(i1<i0) return null;
-    var sum=0,mx=-Infinity,n=0;
-    for(var q=i0;q<=i1;q++){ var d=secMS[q-base]; if(d!==d) continue; sum+=d; n++; if(d>mx) mx=d; }
-    if(!n) return null;
-    return {
-      leq:10*Math.log10(Math.max(sum/n,1e-20))+cfg.off,
-      max:10*Math.log10(Math.max(mx,1e-20))+cfg.off,
-      minutes:Math.round(n/60)
-    };
-  }
-
-  function savePng(win){
-    var W=1800,H=900,k=2,head=112;
-    var c=document.createElement("canvas"); c.width=W; c.height=H;
-    var g=c.getContext("2d");
-    g.fillStyle=C("--bg"); g.fillRect(0,0,W,H);
-    g.textAlign="left";
-
-    var title,bits=[];
-    if(win){
-      title=(cfg.ev?cfg.ev+" · ":"")+win.label;
-      var st=windowStats(win.a0,win.a1);
-      bits.push(new Date(wallOfSec(win.a0)).toLocaleDateString("de-DE"));
-      if(st){
-        bits.push(st.minutes+" min aufgezeichnet");
-        bits.push("Mittelungspegel "+st.leq.toFixed(1)+" dB(A)");
-        bits.push("lauteste Sekunde "+st.max.toFixed(1)+" dB(A)");
-      }
-    } else {
-      title=cfg.ev||"Schallpegel dB(A), letzte 60 Minuten";
-      bits.push(new Date().toLocaleString("de-DE"));
-      if(cfg.ev) bits.unshift("Schallpegel dB(A), letzte 60 Minuten");
-      if(measureStart) bits.push("Laufzeit "+hms(performance.now()-measureStart));
-      var one=leqRing(60),five=leqMin(5),ten=leqMin(10);
-      if(one!==null) bits.push("1 min "+fmt(one));
-      if(five) bits.push("5 min "+fmt(five.db));
-      if(ten) bits.push("10 min "+fmt(ten.db));
-      if(rawMax!==-Infinity) bits.push("max "+fmt(rawMax));
-    }
-    bits.push("Grenzen "+cfg.y+"/"+cfg.r+" dB(A)");
-    if(!cfg.off) bits.push("nicht kalibriert");
-
-    g.fillStyle=C("--ink");
-    g.font='500 34px "Helvetica Neue",Helvetica,Arial,sans-serif';
-    g.fillText(title,40,56);
-    g.font='20px "Helvetica Neue",Helvetica,Arial,sans-serif';
-    g.fillStyle=C("--ink-soft");
-    g.fillText(bits.join("   ·   "),40,90);
-    render(g,40,head,W-80,H-head-36,k,win);
-
-    var slug=((cfg.ev?cfg.ev+"-":"")+(win?win.slug:"schallpegel")).toLowerCase()
-      .replace(/ä/g,"ae").replace(/ö/g,"oe").replace(/ü/g,"ue").replace(/ß/g,"ss")
-      .replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,56) || "schallpegel";
-    var stamp=win?new Date(wallOfSec(win.a0)).toISOString().slice(0,10)
-                 :new Date().toISOString().slice(0,16).replace(/[:T]/g,"-");
-    // Synchron erzeugen, damit Safari den Klick noch als Nutzeraktion zählt (toBlob ist asynchron und verliert sie).
-    var name=slug+"_"+stamp+".png";
-    var bin=atob(c.toDataURL("image/png").split(",")[1]), buf=new Uint8Array(bin.length);
-    for(var i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
-    var blob=new Blob([buf],{type:"image/png"});
-    // iPhone/iPad: Teilen-Menü (dort „Bild sichern“ oder „In Dateien sichern“). Die Seite bleibt offen, der Verlauf bleibt.
-    var file=null; try{ file=new File([blob],name,{type:"image/png"}); }catch(e){}
-    var mobil=/iPhone|iPad|iPod|Android/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
-    if(mobil&&file&&navigator.canShare&&navigator.canShare({files:[file]})){
-      navigator.share({files:[file],title:name}).catch(function(){});
-      return;
-    }
-    // Sonst direkt herunterladen. Ohne Link im Dokument öffnet Safari das Bild im selben Tab, dann wäre der Verlauf weg.
-    var a=document.createElement("a");
-    a.href=URL.createObjectURL(blob); a.download=name; a.rel="noopener"; a.style.display="none";
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },60000);
-  }
-
-  /* ---------- Knöpfe für die Gottesdienstzeiten ---------- */
-  var svcShown={};
-  function serviceTimes(){
-    return String(cfg.svc||"").split(/[,;]/).map(function(s){
-      var m=s.trim().match(/^(\d{1,2})[:.h](\d{2})$/);
-      if(!m) return null;
-      var hh=+m[1],mm=+m[2];
-      if(hh>23||mm>59) return null;
-      return {h:hh,m:mm,key:("0"+hh).slice(-2)+":"+("0"+mm).slice(-2)};
-    }).filter(Boolean);
-  }
-  function checkServices(){
-    if(!measureStartWall || !secCount) return;
-    var now=Date.now(),durMs=Math.max(10,cfg.dur)*60000;
-    serviceTimes().forEach(function(s){
-      if(svcShown[s.key]) return;
-      var d=new Date(measureStartWall); d.setHours(s.h,s.m,0,0);
-      var st=d.getTime(),en=st+durMs;
-      var covered=Math.min(en,now)-Math.max(st,measureStartWall);
-      if(covered<60*60000) return;
-      svcShown[s.key]=true;
-      addServiceButton(s,st,en);
-    });
-  }
-  function addServiceButton(s,st,en){
-    var b=document.createElement("button");
-    b.textContent="Bild "+s.key;
-    b.title="Verlauf von "+s.key+" bis "+hhmm(en)+" als Bild sichern";
-    b.onclick=function(){
-      var a0=Math.max(0,absOfWall(Math.max(st,measureStartWall)));
-      var a1=Math.min(secCount-1,absOfWall(Math.min(en,Date.now())));
-      if(a1<=a0){ chip("keine Daten für diesen Zeitraum","bad"); return; }
-      savePng({a0:a0,a1:a1,label:"Gottesdienst "+s.key+" bis "+hhmm(en),slug:"gottesdienst-"+s.key.replace(":","")});
-    };
-    $("#events").appendChild(b);
-  }
-
-  /* ---------- Einstellungsfenster ---------- */
-  function syncMeta(){
-    var o=$("#dev").selectedOptions[0];
-    $("#chartLbl").textContent="Verlauf der letzten 60 Minuten, "+
-      (cfg.res>0?(cfg.res>=60?"Mittel je Minute":"Mittel je "+cfg.res+" s"):"automatisch gemittelt")+
-      " in dB(A)";
-    $("#meta").innerHTML=
-      (cfg.ev?'<span><b>'+cfg.ev.replace(/[<>&]/g,"")+'</b></span>':'')+
-      '<span>Korrektur <b>'+cfg.off.toFixed(1).replace(".",",")+'</b> dB</span>'+
-      '<span><span class="swatch" style="background:var(--warn)"></span>ab <b>'+cfg.y+'</b></span>'+
-      '<span><span class="swatch" style="background:var(--bad)"></span>ab <b>'+cfg.r+'</b> dB(A)</span>'+
-      (o?'<span class="dev">'+o.textContent+' · Kanal '+(cfg.ch+1)+'</span>':'');
-    writeHash(); draw();
-  }
-  function openSheet(){
-    $("#scrim").hidden=false;
-    $("#ev").value=cfg.ev;
-    $("#res").value=String(cfg.res);
-    $("#svc").value=cfg.svc; $("#dur").value=cfg.dur;
-    $("#off").value=cfg.off.toFixed(1);
-    $("#thY").value=cfg.y; $("#thR").value=cfg.r;
-    $("#close").hidden=!measureStart;
-    $("#go").textContent=measureStart?"Messung neu starten":"Messung starten";
-  }
-  function closeSheet(){ $("#scrim").hidden=true; setTimeout(draw,60); }
-
-  $("#grant").onclick=function(){
-    $("#devNote").textContent="verbinde …";
-    openStream().then(function(){ $("#devNote").textContent="Eingang aktiv"; syncMeta(); })
-      .catch(function(e){ $("#devNote").textContent="kein Zugriff: "+e.name; });
-  };
-  $("#dev").onchange=function(){ cfg.dev=this.value; openStream().then(syncMeta).catch(function(){}); };
-  $("#chan").onchange=function(){ cfg.ch=parseInt(this.value,10)||0; openStream().then(syncMeta).catch(function(){}); };
-  $("#svc").oninput=function(){ cfg.svc=this.value.slice(0,80); syncMeta(); };
-  $("#dur").oninput=function(){ var v=parseFloat(this.value); if(isFinite(v)&&v>=10){ cfg.dur=v; syncMeta(); } };
-  $("#res").onchange=function(){ cfg.res=parseFloat(this.value)||0; syncMeta(); };
-  $("#ev").oninput=function(){ cfg.ev=this.value.slice(0,70); syncMeta(); };
-  $("#off").oninput=function(){ var v=parseFloat(this.value); cfg.off=isFinite(v)?v:0; syncMeta(); };
-  $("#thY").oninput=function(){ var v=parseFloat(this.value); if(isFinite(v)){ cfg.y=v; syncMeta(); } };
-  $("#thR").oninput=function(){ var v=parseFloat(this.value); if(isFinite(v)){ cfg.r=v; syncMeta(); } };
-
-  function calibrate(target){
-    var raw=leqRing(3);
-    if(raw===null||!live){ $("#devNote").textContent="erst Mikrofon freigeben"; return; }
-    cfg.off=target-raw;
-    $("#off").value=cfg.off.toFixed(1);
-    rawMin=Infinity; rawMax=-Infinity;
-    syncMeta();
-  }
-  $("#cal94").onclick=function(){ calibrate(94); };
-  $("#cal110").onclick=function(){ calibrate(110); };
-
-  /* ---------- Verlauf im Browser sichern (IndexedDB, nur auf diesem Gerät) ---------- */
-  var DB=null,geladen=false;   // erst sichern, wenn der alte Stand geladen ist, sonst überschreibt ein leerer Verlauf ihn
-  function db(){
-    if(DB) return DB;
-    DB=new Promise(function(ok,no){
-      var r=indexedDB.open("schallpegel",1);
-      r.onupgradeneeded=function(){ r.result.createObjectStore("verlauf"); };
-      r.onsuccess=function(){ ok(r.result); }; r.onerror=function(){ no(r.error); };
-    }).catch(function(){ return null; });
-    return DB;
-  }
-  function sichern(){
-    if(!geladen||!measureStartWall||!secMS.length) return;
-    var daten={start:measureStartWall,base:secCount-secMS.length,ms:new Float64Array(secMS),bis:Date.now()};
-    db().then(function(d){ if(d) d.transaction("verlauf","readwrite").objectStore("verlauf").put(daten,"v"); });
-  }
-  function vergessen(){ db().then(function(d){ if(d) d.transaction("verlauf","readwrite").objectStore("verlauf").delete("v"); }); }
-  function laden(){
-    return db().then(function(d){
-      if(!d) return null;
-      return new Promise(function(ok){
-        var r=d.transaction("verlauf").objectStore("verlauf").get("v");
-        r.onsuccess=function(){ ok(r.result||null); }; r.onerror=function(){ ok(null); };
-      });
-    }).catch(function(){ return null; });
-  }
-  // Fehlende Sekunden bis jetzt als Lücke auffüllen, damit Uhrzeit und Index zusammenpassen.
-  function luecke(){
-    var bis=absOfWall(Date.now());
-    while(secCount<bis){ secMS.push(NaN); secCount++; }
-    while(secMS.length>KEEP) secMS.shift();
-  }
-  function wiederherstellen(v){
-    if(!v||Date.now()-v.bis>KEEP*1000) return false;
-    measureStartWall=v.start; secMS=Array.prototype.slice.call(v.ms); secCount=v.base+secMS.length;
-    luecke();
-    var alt=Date.now()-KEEP*1000;   // ganz am Anfang abschneiden, was älter als 20 Stunden ist
-    while(secMS.length&&wallOfSec(secCount-secMS.length)<alt) secMS.shift();
-    return true;
-  }
-  setInterval(sichern,10000);
-  document.addEventListener("visibilitychange",function(){ if(document.hidden) sichern(); });
-  window.addEventListener("pagehide",sichern);
-
-  function beginMeasurement(){
-    ring=[]; secMS=[]; secS=0; secN=0; secCount=0; msq=0;
-    rawMin=Infinity; rawMax=-Infinity;
-    measureStart=performance.now(); measureStartWall=Date.now();
-    settle=performance.now()+700;
-    svcShown={}; $("#events").innerHTML="";
-    $("#elapsed").textContent="0:00:00";
-    laden().then(function(v){ geladen=true; if(wiederherstellen(v)){ chip("Verlauf wiederhergestellt","ok"); draw(); checkServices(); } });
-    $("#app").hidden=false;
-    syncMeta(); closeSheet();
-  }
-
-  $("#go").onclick=function(){
-    (live?Promise.resolve():openStream()).then(beginMeasurement)
-      .catch(function(e){ $("#devNote").textContent="kein Zugriff: "+(e.name||e.message); });
-  };
-  $("#close").onclick=closeSheet;
-  $("#gear").onclick=openSheet;
-  document.addEventListener("keydown",function(e){
-    if(e.key==="Escape" && !$("#scrim").hidden && measureStart) closeSheet();
-  });
-
-  $("#startstop").onclick=function(){
-    if(live){ stopAudio(); measureStart=null; elLaf.className="stale";
-      this.textContent="Messung starten"; chip("gestoppt"); }
-    else { openStream().then(function(){ measureStart=performance.now(); if(measureStartWall) luecke(); else measureStartWall=Date.now(); }).catch(function(){}); }
-  };
-  $("#reset").onclick=function(){ rawMin=Infinity; rawMax=-Infinity; };
-  $("#clear").onclick=function(){ secMS=[]; ring=[]; secS=0; secN=0; secCount=0; measureStartWall=Date.now(); svcShown={}; $("#events").innerHTML=""; vergessen(); draw(); };
-  $("#save").onclick=function(){ savePng(); };
-  $("#fast").onclick=function(){ tau=0.125; cfg.tw="f"; this.setAttribute("aria-pressed","true"); $("#slow").setAttribute("aria-pressed","false"); writeHash(); };
-  $("#slow").onclick=function(){ tau=1.0; cfg.tw="s"; this.setAttribute("aria-pressed","true"); $("#fast").setAttribute("aria-pressed","false"); writeHash(); };
-
-  if(cfg.tw==="s"){ $("#slow").setAttribute("aria-pressed","true"); $("#fast").setAttribute("aria-pressed","false"); }
-  $("#ev").value=cfg.ev; $("#res").value=String(cfg.res);
-  $("#svc").value=cfg.svc; $("#dur").value=cfg.dur;
-  $("#off").value=cfg.off.toFixed(1); $("#thY").value=cfg.y; $("#thR").value=cfg.r;
-  syncMeta();
-  writeHash();
-
-  /* Ein blockierter Audio-Kontext wird bei der ersten Interaktion nachgestartet */
-  ["pointerdown","keydown","touchstart"].forEach(function(e){
-    document.addEventListener(e,function(){
-      if(ctx && ctx.state==="suspended") ctx.resume();
-    },true);
-  });
-
-  /* Wurde die Freigabe schon erteilt? */
-  function labelProbe(){
-    return navigator.mediaDevices.enumerateDevices().then(function(ds){
-      return ds.some(function(d){ return d.kind==="audioinput" && d.label; });
-    }).catch(function(){ return false; });
-  }
-  function permissionGranted(){
-    if(navigator.permissions && navigator.permissions.query){
-      return navigator.permissions.query({name:"microphone"})
-        .then(function(p){ return p.state==="granted" ? true : labelProbe(); })
-        .catch(labelProbe);
-    }
-    return labelProbe();
-  }
-
-  /* Freigabe vorhanden und kalibriert: ohne Umweg loslegen */
-  permissionGranted().then(function(ok){
-    if(!ok || !cfg.off){
-      return labelProbe().then(function(l){ if(l) return listDevices(); }).then(openSheet);
-    }
-    return openStream().then(beginMeasurement).catch(function(){ openSheet(); });
-  }).catch(function(){ openSheet(); });
-})();
-</script>
+<script src="texte.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
