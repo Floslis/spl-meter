@@ -53,7 +53,7 @@ python3 -m http.server 8000   # then open http://localhost:8000
 DIN 15905-5 defaults: audience warning from 95 dB(A), maximum 99 dB(A) (both LAeq 30 min), 135 dB(C) LCpeak. Switzerland: 93 and 96 dB(A). Other countries: set your own.
 
 ## Related
-- [avantis-talkback](https://github.com/Floslis/avantis-talkback) · talkback switching for the Allen & Heath Avantis
+- [allenheath-talkback](https://github.com/Floslis/allenheath-talkback) · talkback switching for Allen & Heath desks
 
 ## License
 [MIT](LICENSE) · font [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) under the SIL Open Font License · A project by **[FLOTECH](https://flotech.dev)**

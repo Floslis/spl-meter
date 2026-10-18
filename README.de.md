@@ -53,7 +53,7 @@ python3 -m http.server 8000   # dann http://localhost:8000 öffnen
 Voreinstellung nach DIN 15905-5: Warnhinweis ab 95 dB(A), Obergrenze 99 dB(A) (beides LAeq 30 min), 135 dB(C) LCpeak. Schweiz: 93 und 96 dB(A). Andere Länder: selbst eintragen.
 
 ## Verwandte Projekte
-- [avantis-talkback](https://github.com/Floslis/avantis-talkback) · Talkback-Schaltung fürs Allen & Heath Avantis
+- [allenheath-talkback](https://github.com/Floslis/allenheath-talkback) · Talkback-Schaltung für Allen & Heath Pulte
 
 ## Lizenz
 [MIT](LICENSE) · Schrift [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) unter der SIL Open Font License · Ein Projekt von **[FLOTECH](https://flotech.dev)**
