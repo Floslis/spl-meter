@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.1 · 2026-10-18
+- Ko-fi-Kasten in den Einstellungen und ein Hinweis im Export-Fenster
+
 ## 1.0.0 · 2026-10-18
 - **Englisch und Deutsch**, folgt der Browsersprache, umschaltbar in den Einstellungen
 - **Neues Design** in der FLOTECH-Stream-Optik, Schrift Atkinson Hyperlegible mitgeliefert

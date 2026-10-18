@@ -97,6 +97,13 @@ canvas { flex: 1 1 0; min-height: 0; width: 100%; display: block; border: 1px so
 select { appearance: none; -webkit-appearance: none; padding-right: 30px; background-image: linear-gradient(45deg, transparent 50%, var(--leise) 50%), linear-gradient(135deg, var(--leise) 50%, transparent 50%);
   background-position: calc(100% - 15px) 52%, calc(100% - 10px) 52%; background-size: 5px 5px; background-repeat: no-repeat; }
 
+.kofi { background: #72a4f2; border-color: #72a4f2; color: #fff; }
+.knopf.kofi:hover { border-color: #fff; }
+.unterstuetzen { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; border-left: 4px solid #72a4f2; }
+.unterstuetzen > div { flex: 1 1 260px; }
+.unterstuetzen .note { margin-top: 3px; }
+.sheet .note a { color: var(--text); }
+
 /* Protokoll: nur beim Drucken sichtbar */
 #protokoll { display: none; }
 @media print {

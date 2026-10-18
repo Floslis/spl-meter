@@ -1,7 +1,7 @@
 // Schallpegel-Messer · alles läuft im Browser, nichts wird hochgeladen
 (function(){
   "use strict";
-  var VERSION="1.0.0";
+  var VERSION="1.0.1";
   var $=function(s){ return document.querySelector(s); };
   var CSS=getComputedStyle(document.documentElement);
   var C=function(n){ return CSS.getPropertyValue(n).trim(); };
