@@ -56,4 +56,4 @@ DIN 15905-5 defaults: audience warning from 95 dB(A), maximum 99 dB(A) (both LAe
 - [allenheath-talkback](https://github.com/Floslis/allenheath-talkback) · talkback switching for Allen & Heath desks
 
 ## License
-[MIT](LICENSE) · font [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) under the SIL Open Font License · A project by **[FLOTECH](https://flotech.dev)**
+[AGPL-3.0](LICENSE): free to use, change and share. Anyone who distributes it or offers it as a web service must publish their source code under the same license. © 2026 Florian Hogrebe. Versions up to 1.0.1 were released under MIT. · font [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) under the SIL Open Font License · A project by **[FLOTECH](https://flotech.dev)**

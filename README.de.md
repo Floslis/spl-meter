@@ -56,4 +56,4 @@ Voreinstellung nach DIN 15905-5: Warnhinweis ab 95 dB(A), Obergrenze 99 dB(A) (b
 - [allenheath-talkback](https://github.com/Floslis/allenheath-talkback) · Talkback-Schaltung für Allen & Heath Pulte
 
 ## Lizenz
-[MIT](LICENSE) · Schrift [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) unter der SIL Open Font License · Ein Projekt von **[FLOTECH](https://flotech.dev)**
+[AGPL-3.0](LICENSE): frei nutzen, ändern und weitergeben. Wer es weitergibt oder als Webdienst anbietet, muss seinen Quellcode unter derselben Lizenz offenlegen. © 2026 Florian Hogrebe. Versionen bis 1.0.1 erschienen unter MIT. · Schrift [Atkinson Hyperlegible Next](https://www.brailleinstitute.org/freefont/) unter der SIL Open Font License · Ein Projekt von **[FLOTECH](https://flotech.dev)**
