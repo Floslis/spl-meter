@@ -1,15 +1,15 @@
 // Schallpegel-Messer · alles läuft im Browser, nichts wird hochgeladen
 (function(){
   "use strict";
-  var VERSION="1.0.1";
+  var VERSION="1.0.2";
   var $=function(s){ return document.querySelector(s); };
   var CSS=getComputedStyle(document.documentElement);
   var C=function(n){ return CSS.getPropertyValue(n).trim(); };
 
   /* ---------- Einstellungen: Gerät (localStorage), darüber die Adresszeile ---------- */
-  var cfg={off:0,y:95,r:99,pk:135,dev:"",ch:0,tw:"f",ev:"",ort:"",wer:"",res:10,svc:"10:00, 12:00, 16:00",dur:90,
+  var cfg={off:0,y:95,r:99,pk:135,dev:"",ch:0,tw:"f",ev:"",ort:"",wer:"",res:10,vu:50,vo:110,svc:"10:00, 12:00, 16:00",dur:90,
            lang:/^de\b/i.test(navigator.language||"")?"de":"en"};
-  var ZAHLEN=["off","y","r","pk","ch","res","dur"],TEXTE_=["dev","tw","ev","ort","wer","svc","lang"];
+  var ZAHLEN=["off","y","r","pk","ch","res","dur","vu","vo"],TEXTE_=["dev","tw","ev","ort","wer","svc","lang"];
   function uebernehmen(k,v){
     if(ZAHLEN.indexOf(k)>=0){ var n=parseFloat(v); if(isFinite(n)) cfg[k]=n; }
     else if(TEXTE_.indexOf(k)>=0) cfg[k]=String(v);
@@ -47,7 +47,7 @@
   }
 
   function writeHash(){
-    var s=["off="+cfg.off.toFixed(1),"y="+cfg.y,"r="+cfg.r,"pk="+cfg.pk,"ch="+cfg.ch,"tw="+cfg.tw,"res="+cfg.res,"dur="+cfg.dur,"lang="+cfg.lang];
+    var s=["off="+cfg.off.toFixed(1),"y="+cfg.y,"r="+cfg.r,"pk="+cfg.pk,"ch="+cfg.ch,"tw="+cfg.tw,"res="+cfg.res,"vu="+cfg.vu,"vo="+cfg.vo,"dur="+cfg.dur,"lang="+cfg.lang];
     ["svc","ev","ort","wer","dev"].forEach(function(k){ if(cfg[k]) s.push(k+"="+encodeURIComponent(cfg[k])); });
     history.replaceState(null,"","#"+s.join("&"));
     try{ localStorage.setItem("spl-cfg",JSON.stringify(cfg)); }catch(e){}
@@ -306,20 +306,16 @@
 
     var lo,hi;
     if(cfg.off){
-      lo=50; hi=110;
-      if(vals.length){
-        lo=Math.min(lo,Math.floor((Math.min.apply(null,vals)-4)/10)*10);
-        hi=Math.max(hi,Math.ceil((Math.max.apply(null,vals)+4)/10)*10);
-      }
-      lo=Math.min(lo,Math.floor((cfg.y-5)/10)*10);
-      hi=Math.max(hi,Math.ceil((cfg.r+5)/10)*10);
+      // Kalibriert: feste Skala aus den Einstellungen (Standard 50–110 dB), Werte außerhalb laufen am Rand entlang
+      lo=cfg.vu; hi=cfg.vo;
+      if(!(hi-lo>=10)){ lo=50; hi=110; }
     } else {
       if(vals.length){ lo=Math.min.apply(null,vals); hi=Math.max.apply(null,vals); }
       else { lo=-60; hi=0; }
       lo=Math.floor((lo-4)/10)*10; hi=Math.ceil((hi+4)/10)*10;
       if(hi-lo<20) hi=lo+20;
     }
-    var y=function(v){ return padT+ih-(v-lo)/(hi-lo)*ih; };
+    var y=function(v){ v=Math.min(hi,Math.max(lo,v)); return padT+ih-(v-lo)/(hi-lo)*ih; };
 
     g.font=(11*k)+"px 'Atkinson Hyperlegible Next',system-ui,sans-serif";
     g.lineWidth=1*k;
@@ -668,6 +664,7 @@
     $("#scrim").hidden=false;
     $("#ev").value=cfg.ev; $("#ort").value=cfg.ort; $("#wer").value=cfg.wer;
     $("#res").value=String(cfg.res);
+    $("#vu").value=cfg.vu; $("#vo").value=cfg.vo;
     $("#svc").value=cfg.svc; $("#dur").value=cfg.dur;
     $("#off").value=cfg.off.toFixed(1);
     $("#thY").value=cfg.y; $("#thR").value=cfg.r; $("#thP").value=cfg.pk;
@@ -687,6 +684,10 @@
   $("#svc").oninput=function(){ cfg.svc=this.value.slice(0,80); syncMeta(); };
   $("#dur").oninput=function(){ var v=parseFloat(this.value); if(isFinite(v)&&v>=10){ cfg.dur=v; syncMeta(); } };
   $("#res").onchange=function(){ cfg.res=parseFloat(this.value)||0; syncMeta(); };
+  // Skala des Verlaufs: nur übernehmen, wenn mindestens 10 dB Abstand bleiben
+  function skalaSetzen(){ var u=parseFloat($("#vu").value),o=parseFloat($("#vo").value); if(isFinite(u)&&isFinite(o)&&o-u>=10){ cfg.vu=u; cfg.vo=o; syncMeta(); } }
+  $("#vu").oninput=skalaSetzen; $("#vo").oninput=skalaSetzen;
+  $("#skalaStd").onclick=function(){ $("#vu").value=50; $("#vo").value=110; skalaSetzen(); };
   $("#ev").oninput=function(){ cfg.ev=this.value.slice(0,70); syncMeta(); };
   $("#ort").oninput=function(){ cfg.ort=this.value.slice(0,70); syncMeta(); };
   $("#wer").oninput=function(){ cfg.wer=this.value.slice(0,70); syncMeta(); };

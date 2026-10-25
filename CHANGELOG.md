@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.0.2 · 2026-10-25
+- **Skala des Verlaufs einstellbar** (Standard 50–110 dB), fest statt automatisch erweitert; Werte außerhalb laufen am Rand entlang
+
 ## 1.0.1 · 2026-10-18
 - Ko-fi-Kasten in den Einstellungen und ein Hinweis im Export-Fenster
 
