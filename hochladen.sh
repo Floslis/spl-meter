@@ -1,12 +1,12 @@
 #!/bin/bash
 # Lädt spl.flotech.dev per SFTP zu IONOS hoch. Nutzt Zugang und Passwort von flotech.dev:
 #   ~/.config/flotech-web/sftp.conf (HOST, BENUTZER) und Schlüsselbund-Eintrag flotech-sftp.
-#   ACHTUNG: Der Login landet in der Wurzel des ganzen Webspace. Ziel ist nur der Ordner spl/.
+#   ACHTUNG: Der Login landet in der Wurzel des ganzen Webspace. Ziel ist nur der Ordner spl-flotech/.
 # Setzt die Version des Offline-Speichers (sw.js) auf den aktuellen Commit, damit Geräte das Update holen.
 set -euo pipefail
 cd "$(dirname "$0")"
 source "$HOME/.config/flotech-web/sftp.conf"
-ZIEL=spl
+ZIEL=spl-flotech
 PASS=$(security find-generic-password -s flotech-sftp -a "$BENUTZER" -w)
 [ -z "$(git status --porcelain)" ] || { echo "Erst committen, dann hochladen" >&2; exit 1; }
 STAND=$(git rev-parse --short HEAD)
